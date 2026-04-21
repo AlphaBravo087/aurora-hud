@@ -1,7 +1,7 @@
 name: aurora_hud
 description: "Aurora HUD — a Flutter-based in-vehicle infotainment (IVI) head-unit shell."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
   sdk: ^3.5.3
@@ -15,6 +15,8 @@ dependencies:
   shared_preferences: ^2.3.2
   google_fonts: ^6.2.1
   intl: ^0.19.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

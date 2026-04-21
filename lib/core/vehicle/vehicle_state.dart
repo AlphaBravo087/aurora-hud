@@ -26,6 +26,27 @@ class VehicleState {
     this.reverseCamera = false,
     this.doorsOpen = const [],
     this.sourceName = 'Simulated',
+    this.pitchDeg = 0,
+    this.rollDeg = 0,
+    this.yawDeg = 0,
+    this.headingDeg = 0,
+    this.altitudeM = 0,
+    this.transferCase = TransferCaseMode.twoHi,
+    this.frontDiffLocked = false,
+    this.centerDiffLocked = false,
+    this.rearDiffLocked = false,
+    this.hillDescentAssist = false,
+    this.crawlControl = false,
+    this.tpmsFlKpa = 220,
+    this.tpmsFrKpa = 220,
+    this.tpmsRlKpa = 220,
+    this.tpmsRrKpa = 220,
+    this.wheelSpeedFlKph = 0,
+    this.wheelSpeedFrKph = 0,
+    this.wheelSpeedRlKph = 0,
+    this.wheelSpeedRrKph = 0,
+    this.latitude = -12.4634,
+    this.longitude = 130.8456,
   });
 
   final double speedKph;
@@ -51,6 +72,31 @@ class VehicleState {
   final List<String> doorsOpen;
   final String sourceName;
 
+  // Off-road / 4WD telemetry.
+  final double pitchDeg; // + = nose up
+  final double rollDeg; // + = right side down
+  final double yawDeg;
+  final double headingDeg; // 0..360, compass heading
+  final double altitudeM;
+  final TransferCaseMode transferCase;
+  final bool frontDiffLocked;
+  final bool centerDiffLocked;
+  final bool rearDiffLocked;
+  final bool hillDescentAssist;
+  final bool crawlControl;
+  final double tpmsFlKpa;
+  final double tpmsFrKpa;
+  final double tpmsRlKpa;
+  final double tpmsRrKpa;
+  final double wheelSpeedFlKph;
+  final double wheelSpeedFrKph;
+  final double wheelSpeedRlKph;
+  final double wheelSpeedRrKph;
+
+  // GPS (used by the map screen).
+  final double latitude;
+  final double longitude;
+
   VehicleState copyWith({
     double? speedKph,
     double? rpm,
@@ -74,6 +120,27 @@ class VehicleState {
     bool? reverseCamera,
     List<String>? doorsOpen,
     String? sourceName,
+    double? pitchDeg,
+    double? rollDeg,
+    double? yawDeg,
+    double? headingDeg,
+    double? altitudeM,
+    TransferCaseMode? transferCase,
+    bool? frontDiffLocked,
+    bool? centerDiffLocked,
+    bool? rearDiffLocked,
+    bool? hillDescentAssist,
+    bool? crawlControl,
+    double? tpmsFlKpa,
+    double? tpmsFrKpa,
+    double? tpmsRlKpa,
+    double? tpmsRrKpa,
+    double? wheelSpeedFlKph,
+    double? wheelSpeedFrKph,
+    double? wheelSpeedRlKph,
+    double? wheelSpeedRrKph,
+    double? latitude,
+    double? longitude,
   }) {
     return VehicleState(
       speedKph: speedKph ?? this.speedKph,
@@ -98,6 +165,27 @@ class VehicleState {
       reverseCamera: reverseCamera ?? this.reverseCamera,
       doorsOpen: doorsOpen ?? this.doorsOpen,
       sourceName: sourceName ?? this.sourceName,
+      pitchDeg: pitchDeg ?? this.pitchDeg,
+      rollDeg: rollDeg ?? this.rollDeg,
+      yawDeg: yawDeg ?? this.yawDeg,
+      headingDeg: headingDeg ?? this.headingDeg,
+      altitudeM: altitudeM ?? this.altitudeM,
+      transferCase: transferCase ?? this.transferCase,
+      frontDiffLocked: frontDiffLocked ?? this.frontDiffLocked,
+      centerDiffLocked: centerDiffLocked ?? this.centerDiffLocked,
+      rearDiffLocked: rearDiffLocked ?? this.rearDiffLocked,
+      hillDescentAssist: hillDescentAssist ?? this.hillDescentAssist,
+      crawlControl: crawlControl ?? this.crawlControl,
+      tpmsFlKpa: tpmsFlKpa ?? this.tpmsFlKpa,
+      tpmsFrKpa: tpmsFrKpa ?? this.tpmsFrKpa,
+      tpmsRlKpa: tpmsRlKpa ?? this.tpmsRlKpa,
+      tpmsRrKpa: tpmsRrKpa ?? this.tpmsRrKpa,
+      wheelSpeedFlKph: wheelSpeedFlKph ?? this.wheelSpeedFlKph,
+      wheelSpeedFrKph: wheelSpeedFrKph ?? this.wheelSpeedFrKph,
+      wheelSpeedRlKph: wheelSpeedRlKph ?? this.wheelSpeedRlKph,
+      wheelSpeedRrKph: wheelSpeedRrKph ?? this.wheelSpeedRrKph,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 }
@@ -125,3 +213,28 @@ extension GearLabel on Gear {
 enum IgnitionState { off, accessory, ignition, running, cranking }
 
 enum HeadlightState { off, parking, low, high, auto }
+
+/// Transfer case modes for part-time / full-time 4WD systems.
+enum TransferCaseMode { twoHi, fourAuto, fourHi, fourLo, neutral }
+
+extension TransferCaseLabel on TransferCaseMode {
+  String get short {
+    switch (this) {
+      case TransferCaseMode.twoHi: return '2H';
+      case TransferCaseMode.fourAuto: return '4A';
+      case TransferCaseMode.fourHi: return '4H';
+      case TransferCaseMode.fourLo: return '4L';
+      case TransferCaseMode.neutral: return 'N';
+    }
+  }
+
+  String get long {
+    switch (this) {
+      case TransferCaseMode.twoHi: return '2-Hi  (2WD)';
+      case TransferCaseMode.fourAuto: return '4-Auto';
+      case TransferCaseMode.fourHi: return '4-Hi  (locked)';
+      case TransferCaseMode.fourLo: return '4-Lo  (crawl)';
+      case TransferCaseMode.neutral: return 'Neutral';
+    }
+  }
+}

@@ -26,6 +26,18 @@ abstract class VehicleBus extends ChangeNotifier {
   /// phone call via steering-wheel button feedback).
   void sendSteeringButton(SteeringButton b);
 
+  // --- 4WD / off-road controls -------------------------------------------
+
+  /// Request a transfer-case mode change. Real hardware would forward this to
+  /// the transfer-case ECU and the ECU decides whether the shift is permitted
+  /// (e.g. 4L requires vehicle stopped + neutral).
+  void setTransferCase(TransferCaseMode mode);
+
+  void setFrontDiffLocked(bool locked);
+  void setCenterDiffLocked(bool locked);
+  void setRearDiffLocked(bool locked);
+  void setHillDescentAssist(bool enabled);
+  void setCrawlControl(bool enabled);
 }
 
 enum SteeringButton {
@@ -74,6 +86,8 @@ class SimulatedVehicleBus extends VehicleBus {
     odometerKm: 38421,
     tripKm: 42.7,
     voltage: 14.1,
+    altitudeM: 42,
+    headingDeg: 78,
   );
 
   double _phase = 0;
@@ -96,6 +110,42 @@ class SimulatedVehicleBus extends VehicleBus {
   @override
   void sendSteeringButton(SteeringButton b) {
     _events.add(VehicleEvent.button(b));
+  }
+
+  @override
+  void setTransferCase(TransferCaseMode mode) {
+    _state = _state.copyWith(transferCase: mode);
+    notifyListeners();
+  }
+
+  @override
+  void setFrontDiffLocked(bool locked) {
+    _state = _state.copyWith(frontDiffLocked: locked);
+    notifyListeners();
+  }
+
+  @override
+  void setCenterDiffLocked(bool locked) {
+    _state = _state.copyWith(centerDiffLocked: locked);
+    notifyListeners();
+  }
+
+  @override
+  void setRearDiffLocked(bool locked) {
+    _state = _state.copyWith(rearDiffLocked: locked);
+    notifyListeners();
+  }
+
+  @override
+  void setHillDescentAssist(bool enabled) {
+    _state = _state.copyWith(hillDescentAssist: enabled);
+    notifyListeners();
+  }
+
+  @override
+  void setCrawlControl(bool enabled) {
+    _state = _state.copyWith(crawlControl: enabled);
+    notifyListeners();
   }
 
   void _tick(Timer _) {
@@ -127,6 +177,39 @@ class SimulatedVehicleBus extends VehicleBus {
     final double newTrip = _state.tripKm + newSpeed / 3600 * 0.1;
     final double newOdo = _state.odometerKm + newSpeed / 3600 * 0.1;
 
+    // Attitude (pitch/roll/yaw) — lightly correlated with steering + throttle
+    // so the 4WD attitude indicator feels driven rather than random.
+    final double newPitch = 6 * math.sin(_phase * 0.08) +
+        (newThrottle - 0.3) * 4 -
+        (newBrake * 8);
+    final double newRoll = newSteer * 0.6 + 3 * math.sin(_phase * 0.11);
+    final double newYaw = _state.yawDeg + newSteer * 0.02;
+    final double newHeading = ((_state.headingDeg + newSteer * 0.01) % 360 + 360) % 360;
+    final double newAlt = (_state.altitudeM + math.sin(_phase * 0.04) * 0.5)
+        .clamp(-50.0, 1800.0);
+
+    // Per-wheel speed with small slip when steering.
+    final double slip = newSteer.abs() * 0.08;
+    final double wFl = (newSpeed - slip).clamp(0.0, 250.0);
+    final double wFr = (newSpeed + slip).clamp(0.0, 250.0);
+    final double wRl = (newSpeed - slip * 0.6).clamp(0.0, 250.0);
+    final double wRr = (newSpeed + slip * 0.6).clamp(0.0, 250.0);
+
+    // TPMS: slow oscillation around a nominal pressure + temperature drift.
+    final double ambientKpa = 220 + 4 * math.sin(_phase * 0.02);
+    final double flK = (_state.tpmsFlKpa + (ambientKpa - _state.tpmsFlKpa) * 0.05)
+        .clamp(140.0, 280.0);
+    final double frK = (_state.tpmsFrKpa + (ambientKpa - _state.tpmsFrKpa) * 0.05)
+        .clamp(140.0, 280.0);
+    final double rlK = (_state.tpmsRlKpa + (ambientKpa + 2 - _state.tpmsRlKpa) * 0.05)
+        .clamp(140.0, 280.0);
+    final double rrK = (_state.tpmsRrKpa + (ambientKpa + 2 - _state.tpmsRrKpa) * 0.05)
+        .clamp(140.0, 280.0);
+
+    // Drift the GPS location a tiny bit so the map feels live.
+    final double newLat = _state.latitude + math.sin(_phase * 0.03) * 0.00004;
+    final double newLon = _state.longitude + math.cos(_phase * 0.03) * 0.00004;
+
     _state = _state.copyWith(
       speedKph: newSpeed,
       rpm: newRpm,
@@ -141,6 +224,21 @@ class SimulatedVehicleBus extends VehicleBus {
       tripKm: newTrip,
       odometerKm: newOdo,
       voltage: 13.9 + 0.3 * math.sin(_phase * 0.2),
+      pitchDeg: newPitch,
+      rollDeg: newRoll,
+      yawDeg: newYaw,
+      headingDeg: newHeading,
+      altitudeM: newAlt,
+      wheelSpeedFlKph: wFl,
+      wheelSpeedFrKph: wFr,
+      wheelSpeedRlKph: wRl,
+      wheelSpeedRrKph: wRr,
+      tpmsFlKpa: flK,
+      tpmsFrKpa: frK,
+      tpmsRlKpa: rlK,
+      tpmsRrKpa: rrK,
+      latitude: newLat,
+      longitude: newLon,
     );
     notifyListeners();
   }

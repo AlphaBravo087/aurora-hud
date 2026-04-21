@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import '../../core/settings/settings_controller.dart';
 import '../carplay/carplay_screen.dart';
 import '../climate/climate_screen.dart';
+import '../four_wd/four_wd_screen.dart';
 import '../gauges/gauges_screen.dart';
 import '../home/home_screen.dart';
+import '../map/map_screen.dart';
 import '../media/media_screen.dart';
 import '../navigation/nav_screen.dart';
 import '../settings/settings_screen.dart';
@@ -25,6 +27,8 @@ class _AuroraShellState extends State<AuroraShell> {
   final List<_Section> _sections = const [
     _Section('Home',     Icons.home_filled,            HomeScreen()),
     _Section('Drive',    Icons.speed,                  GaugesScreen()),
+    _Section('4WD',      Icons.airline_stops,          FourWheelDriveScreen()),
+    _Section('Map',      Icons.map,                    MapScreen()),
     _Section('Media',    Icons.play_circle_filled,     MediaScreen()),
     _Section('Nav',      Icons.near_me,                NavScreen()),
     _Section('Climate',  Icons.ac_unit,                ClimateScreen()),
